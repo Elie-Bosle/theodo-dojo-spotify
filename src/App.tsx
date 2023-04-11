@@ -1,8 +1,11 @@
 import logo from './assets/logo.svg';
 import './App.css';
 import { useState } from 'react';
+import { fetchTracks } from './lib/fetchTracks';
+import { useQuery } from '@tanstack/react-query';
+import { SavedTrack } from 'spotify-types';
 
-const trackUrls = [
+const tracksUrl = [
   'https://p.scdn.co/mp3-preview/742294f35af9390e799dd96c633788410a332e52',
   'https://p.scdn.co/mp3-preview/5a12483aa3b51331aba663131dbac967ccb33d99',
   'https://p.scdn.co/mp3-preview/31f65b6a613010f22316c7be335b62226cf2f263',
@@ -12,10 +15,26 @@ const trackUrls = [
 
 const App = () => {
   const [trackIndex, setTrackIndex] = useState(0);
-
   const goToNextTrack = () => {
     setTrackIndex(trackIndex + 1);
   };
+  const { data: tracks, isLoading } = useQuery({
+    queryKey: ['tracks'],
+    queryFn: fetchTracks,
+  });
+  const AlbumCover = ({ track }: { track: SavedTrack }) => {
+    return (
+      <img
+        src={track.track.album.images[0]?.url}
+        style={{ width: 400, height: 400 }}
+      />
+    );
+  };
+
+  if (isLoading) {
+    return "loading"
+  }
+
   return (
     <div className="App">
       <header className="App-header">
@@ -23,11 +42,15 @@ const App = () => {
         <h1 className="App-title">Bienvenue sur le blind test</h1>
       </header>
       <div className="App-images">
+        <AlbumCover track={tracks ? tracks[0] : null} />
         <p>Test !</p>
       </div>
-      <audio src={trackUrls[trackIndex]} autoPlay controls />
+      {tracks && <audio src={tracks[trackIndex]} autoPlay controls />}
       <button onClick={goToNextTrack}>Next track</button>
       <div className="App-buttons"></div>
+      <p>{tracks ? (tracks[0] ? tracks[0].track.name : 'Rien') : 'nothing'}</p>
+      <p>abc {`${isLoading}`}</p>
+      {/*<p>{tracks? tracks.length : 'Rien' }</p>*/}
     </div>
   );
 };
